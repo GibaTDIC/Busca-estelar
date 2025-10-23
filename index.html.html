@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture a Estrela!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4c1d95 0%, #1e3a8a 50%, #312e81 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #93c5fd;
+            font-size: 1.1rem;
+        }
+
+        .game-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .score-value {
+            color: #fbbf24;
+        }
+
+        .time-value {
+            color: #4ade80;
+        }
+
+        .best-value {
+            color: #fbbf24;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 20px 50px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .game-over {
+            color: white;
+            margin-top: 30px;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .game-over p {
+            font-size: 1.3rem;
+        }
+
+        .game-area {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            height: 400px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.1s;
+            font-size: 48px;
+            filter: drop-shadow(0 0 10px rgba(252, 211, 77, 0.8));
+            animation: pulse 1s infinite;
+        }
+
+        .star:hover {
+            transform: scale(1.25);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.1);
+            }
+        }
+
+        .tip {
+            text-align: center;
+            color: #93c5fd;
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⭐ Capture a Estrela!</h1>
+            <p class="subtitle">Clique nas estrelas o mais rápido que puder!</p>
+        </div>
+
+        <div class="game-panel">
+            <div class="stats">
+                <div class="stat-item">
+                    <span>Pontos:</span>
+                    <span class="stat-value score-value" id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Tempo:</span>
+                    <span class="stat-value time-value" id="time">30s</span>
+                </div>
+                <div class="stat-item">
+                    <span>🏆</span>
+                    <span class="stat-value best-value" id="bestScore">0</span>
+                </div>
+            </div>
+
+            <div id="startScreen" class="start-screen">
+                <button class="start-btn" onclick="startGame()">Iniciar Jogo</button>
+            </div>
+
+            <div id="gameArea" class="game-area hidden"></div>
+        </div>
+
+        <div class="tip">
+            <p>💡 Dica: Quanto mais rápido você clicar, mais pontos você faz!</p>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+        let bestScore = 0;
+        let timer;
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            gameActive = true;
+            
+            document.getElementById('score').textContent = score;
+            document.getElementById('time').textContent = timeLeft + 's';
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+            
+            spawnStar();
+            startTimer();
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time').textContent = timeLeft + 's';
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timer);
+            
+            if (score > bestScore) {
+                bestScore = score;
+                document.getElementById('bestScore').textContent = bestScore;
+            }
+            
+            document.getElementById('gameArea').innerHTML = '';
+            document.getElementById('gameArea').classList.add('hidden');
+            
+            const startScreen = document.getElementById('startScreen');
+            startScreen.innerHTML = `
+                <button class="start-btn" onclick="startGame()">Jogar Novamente</button>
+                <div class="game-over">
+                    <h2>Fim de jogo!</h2>
+                    <p>Você capturou ${score} estrelas! 🎉</p>
+                </div>
+            `;
+            startScreen.classList.remove('hidden');
+        }
+
+        function spawnStar() {
+            if (!gameActive) return;
+            
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+            
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.textContent = '⭐';
+            
+            const x = Math.random() * 80 + 10;
+            const y = Math.random() * 70 + 15;
+            
+            star.style.left = x + '%';
+            star.style.top = y + '%';
+            
+            star.onclick = () => {
+                if (gameActive) {
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    spawnStar();
+                }
+            };
+            
+            gameArea.appendChild(star);
+        }
+    </script>
+</body>
+</html>
